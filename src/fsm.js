@@ -1,61 +1,97 @@
 class FSM {
-    /**
-     * Creates new FSM instance.
-     * @param config
-     */
-    constructor(config) {}
+    constructor(config) {
+		if(config == null)
+			return throws("config is'nt passed");
+		 this.initial = config.initial;
+		 this.activeState = config.initial;
+		 this.states = config.states;
+		 
+		 this.flag_success = false;
+		 this.flag_redo = false;
+		 this.history = [];	 
+		 this.index = 0;
+	}
 
-    /**
-     * Returns active state.
-     * @returns {String}
-     */
-    getState() {}
+    getState() {
+		return this.activeState;
+	}
 
-    /**
-     * Goes to specified state.
-     * @param state
-     */
-    changeState(state) {}
+    changeState(state) {
+		if(state in this.states)
+		{
+			this.history[this.index++] = this.activeState;
+			this.activeState = state; 
+			this.flag_success = true;
+		}
+		else
+			return throws("state don't exist");
+	}
 
-    /**
-     * Changes state according to event transition rules.
-     * @param event
-     */
-    trigger(event) {}
+    trigger(event) {
+		if(event in this.states[this.activeState].transitions)
+		{
+			this.history[this.index++] = this.activeState;
+			this.activeState = this.states[this.activeState].transitions[event];
+			this.flag_success = true;
+		}
+		else throws("event don't exist");
+	}
 
-    /**
-     * Resets FSM state to initial.
-     */
-    reset() {}
+    reset() {
+		this.activeState = this.initial;
+	}
 
-    /**
-     * Returns an array of states for which there are specified event transition rules.
-     * Returns all states if argument is undefined.
-     * @param event
-     * @returns {Array}
-     */
-    getStates(event) {}
+    getStates(event) {
+		var arr = [];
+		if(event == null)
+		{
+			for(var i in this.states)
+				arr.push(i);
+		}
+		else
+		{
+			for(var i in this.states)
+			{
+				if(this.states[i].transitions[event] != undefined)
+					arr.push(i);
+			}		
+		}
+		return arr;
 
-    /**
-     * Goes back to previous state.
-     * Returns false if undo is not available.
-     * @returns {Boolean}
-     */
-    undo() {}
+	}
 
-    /**
-     * Goes redo to state.
-     * Returns false if redo is not available.
-     * @returns {Boolean}
-     */
-    redo() {}
+    undo() {
+		if(this.activeState == this.initial)
+			return false;
+	
+		this.index --;
+		this.flag_redo = true;
+		this.activeState = this.history[this.index];
+		if(this.flag_success)
+		{
+			this.flag_success = false;
+			return true;
+		}
+		
+	}
 
-    /**
-     * Clears transition history
-     */
-    clearHistory() {}
+    redo() {
+		if(this.activeState == this.initial || !this.flag_redo)
+		{
+			this.flag_redo = false;
+			return false;
+		}
+				this.index++;
+				this.activeState = this.history[this.index];
+				if(this.flag_success)
+					return true;
+	}
+
+    clearHistory() {
+		this.history = [];
+		this.index = 0;
+	}
 }
 
 module.exports = FSM;
 
-/** @Created by Uladzimir Halushka **/
